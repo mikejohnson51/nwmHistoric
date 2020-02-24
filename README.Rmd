@@ -1,0 +1,83 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "75%"
+)
+```
+
+# nwmHistoric <img src="man/figures/logo.png" width=180 height = 40 align="right" />
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+## Installation
+
+```{r, echo = FALSE}
+## Currently Private
+## remotes::install_github('mikejohnson51/nwmHistoric')
+
+devtools::load_all()
+library(dplyr)
+library(ggplot2)
+library(AOI)
+library(nhdplusTools)
+library(nwmHistoric)
+library(leaflet)
+```
+
+
+## Basic use
+
+Lets find the historic flows nearest my home:
+
+```{r}
+
+pt  = AOI::geocode('University of Alabama', pt = TRUE) 
+comid = nhdplusTools::discover_nhdplus_id(pt)
+nhd = HydroData::findNHD(comid = comid)
+
+aoi_map(pt, returnMap = TRUE) %>% addPolylines(data = nhd$nhd)
+out = extract_retro_url(comid = comid)
+
+head(out)
+dim(out)
+```
+
+```{r}
+
+sub = extract_retro_url(comid = comid, 
+startDate = "2017-01-01", endDate = "2017-12-31")
+
+head(sub)
+dim(out)
+
+sub_daily = sub %>% 
+  group_by(year,month,day) %>% 
+  summarise(meanFlow = mean(flow)) %>% 
+  mutate(date = as.Date(paste(year,month,day,sep = "-")))
+
+ggplot(data = sub_daily, aes(x = date, y = meanFlow, group = 1)) +
+  geom_line() + 
+  theme_bw() 
+```
+
+
+# Collaborators:
+
+[Mike Johnson](https://mikejohnson51.github.io/)
+
+[David Blodgett](https://www.usgs.gov/staff-profiles/david-l-blodgett?qt-staff_profile_science_products=3#qt-staff_profile_science_products)
+
+[Pat Johnson](https://overdodactyl.github.io/)
+
+# Support:
+
+This effort is supported by the Consortium of Universities for the Advancement of Hydrologic Science, Inc. under the HydroInformatics Fellowship. See program [here](https://www.cuahsi.org/data-models/hydroinformatics-innovation-fellowship/)
