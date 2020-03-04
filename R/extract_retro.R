@@ -6,7 +6,7 @@
 #' @return data.frame
 #' @importFrom dplyr mutate
 #' @importFrom RNetCDF open.nc var.get.nc close.nc
-#' @export
+
 
 extract_retro = function(comid, startDate = NULL, endDate = NULL, archive = NULL){
   

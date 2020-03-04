@@ -17,5 +17,5 @@ extract_retro_url(comid, startDate = NULL, endDate = NULL)
 data.frame
 }
 \description{
-Download hourly flow values for an NHD COMID from the National Water Model version 2.0. Returned data is avaliable between "1993-01-01" and "2017-12-31" but can be subset using a startDate and endDate.
+Download hourly flow values for an NHD COMID from the National Water Model version 2.0. Returned data is availiable between "1993-01-01" and "2017-12-31" but can be subset using a startDate and endDate.
 }
