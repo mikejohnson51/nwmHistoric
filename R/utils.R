@@ -1,4 +1,3 @@
-
 baseURL <- 'https://cida-test.er.usgs.gov/thredds/dodsC/demo/temp/nwm/nwm_v2_retro_full/nwm_retro_v2_'
 
 #' @title Retro Call Meta Data
