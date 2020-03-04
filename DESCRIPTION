@@ -9,6 +9,9 @@ Depends:
 Imports:
     RNetCDF,
     dplyr,
+    doParallel,
+    foreach,
+    magrittr
 Description: What the package does (one paragraph).
 License: CC0
 Encoding: UTF-8

@@ -1,5 +1,7 @@
 #' @title Extract Historic timeseries for COMID
 #' @param comid an NHD COMID 
+#' @param startDate a start date (YYYY-MM-DD)
+#' @param endDate an end date (YYYY-MM-DD)
 #' @param archive path to the data archive
 #' @return data.frame
 #' @importFrom dplyr mutate
