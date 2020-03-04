@@ -10,8 +10,10 @@ baseURL <- 'https://cida-test.er.usgs.gov/thredds/dodsC/demo/temp/nwm/nwm_v2_ret
 
 retro_call = function(comid = NULL, startDate = NULL, endDate = NULL){
 
+  
   fileIDs = lapply(comid, fileID_find) %>% 
-    dplyr::bind_rows()
+    dplyr::bind_rows() %>% 
+    add_comid_index()
   
   bad.ids = fileIDs$comid[!complete.cases(fileIDs)]
   
@@ -33,16 +35,17 @@ retro_call = function(comid = NULL, startDate = NULL, endDate = NULL){
   
   return(data.frame(
               COMID = fileIDs$comid,
-              index = fileIDs$index,
+              index = fileIDs$id,
               fileID     = fileIDs$fileID,
               startDate  = startDate,
               endDate    = endDate,
               startIndex = s - 1 , 
-              endIndex   = e - 1)
+              endIndex   = e - 1
          ) %>% 
     mutate(url = paste0(baseURL, fileID, '.nc',
                         "?streamflow[", index, ":1:", index, "]",
                         "[", startIndex , ":1:", endIndex, "]") )
+  )
   } else {
     return(NULL)
   }
@@ -65,17 +68,16 @@ NULL
 fileID_find = function(x){ 
   
   id =  sprintf("%03d", which(
-    x >= nwm_retro_index$minCOMID & 
+      x >= nwm_retro_index$minCOMID & 
       x <= nwm_retro_index$maxCOMID
   ))
-  
-  index = which(cID %in% x)
   
   data.frame(
     comid = x,
     fileID = ifelse(length(id) > 0, id, NA),
-    index = ifelse(length(id) > 0, index, NA)
+    stringsAsFactors = FALSE
   )
+  
 }
 
 #' @title Time Sequence Generator
@@ -91,4 +93,33 @@ hour_seq  = function(startDate, endDate){
     to   = as.POSIXct(paste(endDate, "23:00"), tz="UTC"),
     by   = "hour"
   )
+}
+
+
+#' @title Add COMID index based on THREDDs file
+#' @param fileIDs a output from \code{fileID_find}
+#' @return data.frame
+#' @keywords internal
+#' @export
+
+add_comid_index = function(fileIDs) {
+  u = unique(fileIDs$fileID)
+  
+  `%dopar%` <- foreach::`%dopar%`
+  no_cores  <- parallel::detectCores() - 1
+  doParallel::registerDoParallel(no_cores)
+  
+  res = foreach::foreach(i = 1:length(u), .combine = rbind) %dopar% {
+    tmp = fileIDs[fileIDs$fileID == u[i], ]
+    
+    url  = paste0(baseURL, u[i], '.nc?feature_id')
+    id =  RNetCDF::open.nc(url) %>%
+      RNetCDF::var.get.nc('feature_id')
+    
+    tmp$id = match(tmp$comid, id)
+    
+    tmp
+  }
+  
+  res
 }
