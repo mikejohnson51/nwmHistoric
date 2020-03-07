@@ -18,7 +18,6 @@
     #> The following objects are masked from 'package:base':
     #> 
     #>     intersect, setdiff, setequal, union
-    #> USGS Support Package: https://owi.usgs.gov/R/packages.html#support
 
 ## Basic use
 
@@ -27,7 +26,7 @@ Lets find the historic flows nearest my home:
 ``` r
 
 pt  = AOI::geocode('University of Alabama', pt = TRUE) 
-comid = nhdplusTools::discover_nhdplus_id(pt)
+comid = discover_comid(pt)
 nhd = HydroData::findNHD(comid = comid)
 #> Returned object contains: 1 nhd flowlines
 
@@ -39,43 +38,51 @@ aoi_map(pt, returnMap = TRUE) %>% addPolylines(data = nhd$nhd)
 <img src="man/figures/README-unnamed-chunk-3-1.png" width="75%" />
 
 ``` r
-out = extract_retro_url(comid = comid)
+out = readNWMdata(comid = comid)
 
 head(out)
-#>   model    comid            time_utc flow year month day hour
-#> 1 NWM20 18228721 1993-01-01 00:00:00  0.2 1993    01  01   00
-#> 2 NWM20 18228721 1993-01-01 01:00:00  0.2 1993    01  01   01
-#> 3 NWM20 18228721 1993-01-01 02:00:00  0.2 1993    01  01   02
-#> 4 NWM20 18228721 1993-01-01 03:00:00  0.2 1993    01  01   03
-#> 5 NWM20 18228721 1993-01-01 04:00:00  0.2 1993    01  01   04
-#> 6 NWM20 18228721 1993-01-01 05:00:00  0.2 1993    01  01   05
+#> # A tibble: 6 x 4
+#>   model    comid time_utc             flow
+#>   <fct>    <int> <dttm>              <dbl>
+#> 1 NWM20 18228721 1993-01-01 00:00:00     0
+#> 2 NWM20 18228721 1993-01-01 01:00:00     0
+#> 3 NWM20 18228721 1993-01-01 02:00:00     0
+#> 4 NWM20 18228721 1993-01-01 03:00:00     0
+#> 5 NWM20 18228721 1993-01-01 04:00:00     0
+#> 6 NWM20 18228721 1993-01-01 05:00:00     0
 dim(out)
-#> [1] 219144      8
+#> [1] 219144      4
 ```
 
 ``` r
 
-sub = extract_retro_url(comid = comid, 
-startDate = "2017-01-01", endDate = "2017-12-31")
+sub = readNWMdata(comid = comid, 
+startDate = "2017-01-01", 
+endDate = "2017-12-31")
 
 head(sub)
-#>   model    comid            time_utc flow year month day hour
-#> 1 NWM20 18228721 2017-01-01 00:00:00    0 2017    01  01   00
-#> 2 NWM20 18228721 2017-01-01 01:00:00    0 2017    01  01   01
-#> 3 NWM20 18228721 2017-01-01 02:00:00    0 2017    01  01   02
-#> 4 NWM20 18228721 2017-01-01 03:00:00    0 2017    01  01   03
-#> 5 NWM20 18228721 2017-01-01 04:00:00    0 2017    01  01   04
-#> 6 NWM20 18228721 2017-01-01 05:00:00    0 2017    01  01   05
-dim(out)
-#> [1] 219144      8
+#> # A tibble: 6 x 4
+#>   model    comid time_utc             flow
+#>   <fct>    <int> <dttm>              <dbl>
+#> 1 NWM20 18228721 2017-01-01 00:00:00     0
+#> 2 NWM20 18228721 2017-01-01 01:00:00     0
+#> 3 NWM20 18228721 2017-01-01 02:00:00     0
+#> 4 NWM20 18228721 2017-01-01 03:00:00     0
+#> 5 NWM20 18228721 2017-01-01 04:00:00     0
+#> 6 NWM20 18228721 2017-01-01 05:00:00     0
+dim(sub)
+#> [1] 8760    4
 
-sub_daily = sub %>% 
-  group_by(year,month,day) %>% 
-  summarise(meanFlow = mean(flow)) %>% 
-  mutate(date = as.Date(paste(year,month,day,sep = "-")))
+sub_summary = sub %>% aggregate_monthly(FUN = c("max", "mean", "min"))
+sub = reshape2::melt(sub_summary, c('comid', "time_utc"))
 
-ggplot(data = sub_daily, aes(x = date, y = meanFlow, group = 1)) +
+
+ggplot(data = sub, aes(x = time_utc, y = value, color = variable)) +
   geom_line() + 
+  labs(title = paste0("2017 Monthly Mean COMID: ", comid),
+       x = "Date",
+       y = "Streamflow (cms)",
+       color = "Aggragation") +
   theme_bw() 
 ```
 

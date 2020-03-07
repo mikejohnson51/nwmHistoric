@@ -28,7 +28,6 @@ devtools::load_all()
 library(dplyr)
 library(ggplot2)
 library(AOI)
-library(nhdplusTools)
 library(nwmHistoric)
 library(leaflet)
 ```
@@ -41,11 +40,11 @@ Lets find the historic flows nearest my home:
 ```{r}
 
 pt  = AOI::geocode('University of Alabama', pt = TRUE) 
-comid = nhdplusTools::discover_nhdplus_id(pt)
+comid = discover_comid(pt)
 nhd = HydroData::findNHD(comid = comid)
 
 aoi_map(pt, returnMap = TRUE) %>% addPolylines(data = nhd$nhd)
-out = extract_retro_url(comid = comid)
+out = readNWMdata(comid = comid)
 
 head(out)
 dim(out)
@@ -53,19 +52,23 @@ dim(out)
 
 ```{r}
 
-sub = extract_retro_url(comid = comid, 
-startDate = "2017-01-01", endDate = "2017-12-31")
+sub = readNWMdata(comid = comid, 
+startDate = "2017-01-01", 
+endDate = "2017-12-31")
 
 head(sub)
-dim(out)
+dim(sub)
 
-sub_daily = sub %>% 
-  group_by(year,month,day) %>% 
-  summarise(meanFlow = mean(flow)) %>% 
-  mutate(date = as.Date(paste(year,month,day,sep = "-")))
+sub_summary = sub %>% aggregate_monthly(FUN = c("max", "mean", "min"))
+sub = reshape2::melt(sub_summary, c('comid', "time_utc"))
 
-ggplot(data = sub_daily, aes(x = date, y = meanFlow, group = 1)) +
+
+ggplot(data = sub, aes(x = time_utc, y = value, color = variable)) +
   geom_line() + 
+  labs(title = paste0("2017 Monthly Mean COMID: ", comid),
+       x = "Date",
+       y = "Streamflow (cms)",
+       color = "Aggragation") +
   theme_bw() 
 ```
 

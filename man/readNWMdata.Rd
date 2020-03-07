@@ -10,6 +10,8 @@ readNWMdata(comid = NULL, siteNumber = NULL, startDate = NULL,
 \arguments{
 \item{comid}{a NHD common identifier}
 
+\item{siteNumber}{a USGS NWIS site number (eight digits)}
+
 \item{startDate}{a start date (YYYY-MM-DD)}
 
 \item{endDate}{an end date (YYYY-MM-DD)}

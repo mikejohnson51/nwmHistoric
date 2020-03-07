@@ -1,7 +1,7 @@
 #' @title NWM Reanalysis Extraction
 #' @description Download hourly flow values for an NHD COMID from the National Water Model version 2.0. Returned data is availiable between "1993-01-01" and "2017-12-31" but can be subset using a startDate and endDate.
 #' @param comid a NHD common identifier
-#' @siteID
+#' @param siteNumber a USGS NWIS site number (eight digits)
 #' @param startDate a start date (YYYY-MM-DD)
 #' @param endDate an end date (YYYY-MM-DD)
 #' @return data.frame
