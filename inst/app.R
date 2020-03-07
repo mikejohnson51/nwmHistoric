@@ -8,15 +8,10 @@ devtools::load_all()
 
 make_plots = function(x){
   
-  history = nwmHistoric::extract_retro_url(x)
-  
-  vals = history %>%
-    group_by(year, month, day) %>%
-    summarise(flow = max(flow)) %>%
-    ungroup() %>%
-    mutate(date = as.Date(paste(year, month, day, sep = "-")))
+  vals = x %>%
+    aggregate_daily()
 
-  p = ggplot(data = vals, aes(x = date, y = flow)) +
+  p = ggplot(data = vals, aes(x = time_utc, y = flow)) +
     geom_line(size = .1) +
     labs(x = 'Date', y = 'Streamflow (cms)') +
     theme_classic()
@@ -93,7 +88,7 @@ server <- function(input, output,session) {
     pt$osm_id = rev$osm_id
     pt$osm_type = rev$osm_type
     pt$name = rev$display_name
-    pt$comid = nhdplusTools::discover_nhdplus_id(pt)
+    pt$comid = discover_comid(pt)
     
     pt <<- pt 
     
@@ -107,11 +102,15 @@ server <- function(input, output,session) {
   })
   
   observeEvent(input$button_click, {
+    
+    history = nwmHistoric::readNWMdata(x)
+    
+    
     showModal(modalDialog(
       title = HTML(paste(pt$name),
                    paste("<br>COMID:", pt$comid)),
       renderPlot({
-        make_plots(pt$comid)
+        make_plots(history)
       }),
       downloadButton('foo', label = "Download PNG"),
       downloadButton('foo2', label = "Download CSV"),

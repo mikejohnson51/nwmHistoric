@@ -89,10 +89,11 @@ fileID_find = function(x){
 
 hour_seq  = function(startDate, endDate){
   seq(
-    from = as.POSIXct(paste(startDate, "0:00"), tz="UTC"),
-    to   = as.POSIXct(paste(endDate, "23:00"), tz="UTC"),
+    from = as.POSIXlt(paste(startDate, "0:00"), tz="UTC"),
+    to   = as.POSIXlt(paste(endDate, "23:00"), tz="UTC"),
     by   = "hour"
-  )
+  ) %>% 
+  as.POSIXlt()
 }
 
 
