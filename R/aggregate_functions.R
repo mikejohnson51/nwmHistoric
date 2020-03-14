@@ -44,6 +44,43 @@ aggregate_monthly = function(rawData, FUN = "sum"){
     select(-yr, -mon)
 }
 
+#' @title Aggregate Hourly Data to Seasonal Values
+#' @param rawData data extracted with \code{readNWMdata} 
+#' @param FUN function used to aggregate values 
+#' @return an aggregated data.frame
+#' @export
+#' 
+aggregate_season = function(rawData, FUN, na.rm = TRUE){
+  
+  rawData$time_utc = as.POSIXlt(rawData$time_utc)
+  
+  if(na.rm){
+    rawData = rawData[!is.na(rawData$flow),]
+  }
+  
+  data.frame(
+    flow = rawData$flow,
+    comid = rawData$comid,
+    month   = rawData$time_utc$mon + 1)  %>% 
+  mutate(season=recode(month, 
+                    `1`="Winter",
+                    `2`="Winter",
+                    `3`="Spring",
+                    `4`="Spring",
+                    `5`="Spring",
+                    `6`="Summer",
+                    `7`="Summer",
+                    `8`="Summer",
+                    `9`="Fall",
+                    `10`="Fall",
+                    `11`="Fall",
+                    `12`="Winter")) %>% 
+    group_by(comid, season) %>% 
+    summarize_at(vars(flow), FUN)  %>% 
+    ungroup() 
+  
+}
+
 #' @title Aggregate Hourly Data to Yearly Values
 #' @param rawData data extracted with \code{readNWMdata} 
 #' @param FUN function used to aggregate values 
@@ -61,7 +98,7 @@ aggregate_yearly = function(rawData, FUN, na.rm = TRUE){
   data.frame(
     flow = rawData$flow,
     comid = rawData$comid,
-    yr   = rawData$time_utc$year + 1900) %>% 
+    month   = rawData$time_utc$year + 1900) %>% 
     group_by(comid, yr) %>% 
     summarize_at(vars(flow), FUN)  %>% 
     mutate(time_utc = as.Date(paste(yr,"01", "01", sep = "-"), "%Y-%m-%d")) %>% 
