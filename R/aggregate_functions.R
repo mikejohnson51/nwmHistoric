@@ -28,7 +28,7 @@ aggregate_daily = function(rawData, FUN = "mean"){
 #' @return an aggregated data.frame
 #' @export
 
-aggregate_monthly = function(rawData, FUN = "sum"){
+aggregate_monthly = function(rawData, FUN = "mean"){
   
   rawData$time_utc = as.POSIXlt(rawData$time_utc)
   
@@ -50,7 +50,7 @@ aggregate_monthly = function(rawData, FUN = "sum"){
 #' @return an aggregated data.frame
 #' @export
 #' 
-aggregate_season = function(rawData, FUN, na.rm = TRUE){
+aggregate_season = function(rawData, FUN = "mean", na.rm = TRUE){
   
   rawData$time_utc = as.POSIXlt(rawData$time_utc)
   
@@ -87,7 +87,7 @@ aggregate_season = function(rawData, FUN, na.rm = TRUE){
 #' @return an aggregated data.frame
 #' @export
 #' 
-aggregate_yearly = function(rawData, FUN, na.rm = TRUE){
+aggregate_yearly = function(rawData, FUN = "mean", na.rm = TRUE){
   
   rawData$time_utc = as.POSIXlt(rawData$time_utc)
   
@@ -98,7 +98,7 @@ aggregate_yearly = function(rawData, FUN, na.rm = TRUE){
   data.frame(
     flow = rawData$flow,
     comid = rawData$comid,
-    month   = rawData$time_utc$year + 1900) %>% 
+    yr   = rawData$time_utc$year + 1900) %>% 
     group_by(comid, yr) %>% 
     summarize_at(vars(flow), FUN)  %>% 
     mutate(time_utc = as.Date(paste(yr,"01", "01", sep = "-"), "%Y-%m-%d")) %>% 
@@ -106,6 +106,7 @@ aggregate_yearly = function(rawData, FUN, na.rm = TRUE){
     select(-yr)
   
 }
+
 
 # aggregate_waterYear = function(rawData){
 #   

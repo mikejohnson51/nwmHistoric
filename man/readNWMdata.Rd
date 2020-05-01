@@ -4,8 +4,13 @@
 \alias{readNWMdata}
 \title{NWM Reanalysis Extraction}
 \usage{
-readNWMdata(comid = NULL, siteNumber = NULL, startDate = NULL,
-  endDate = NULL)
+readNWMdata(
+  comid = NULL,
+  siteNumber = NULL,
+  startDate = "1993-01-01",
+  endDate = "2018-01-01",
+  version = "2"
+)
 }
 \arguments{
 \item{comid}{a NHD common identifier}

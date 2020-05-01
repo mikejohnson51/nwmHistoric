@@ -4,7 +4,7 @@
 \alias{aggregate_season}
 \title{Aggregate Hourly Data to Seasonal Values}
 \usage{
-aggregate_season(rawData, FUN, na.rm = TRUE)
+aggregate_season(rawData, FUN = "mean", na.rm = TRUE)
 }
 \arguments{
 \item{rawData}{data extracted with \code{readNWMdata}}

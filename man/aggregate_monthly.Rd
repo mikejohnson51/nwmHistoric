@@ -4,7 +4,7 @@
 \alias{aggregate_monthly}
 \title{Aggregate Hourly Data to Monthly Values}
 \usage{
-aggregate_monthly(rawData, FUN = "sum")
+aggregate_monthly(rawData, FUN = "mean")
 }
 \arguments{
 \item{rawData}{data extracted with \code{readNWMdata}}

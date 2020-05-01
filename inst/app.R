@@ -103,7 +103,7 @@ server <- function(input, output,session) {
   
   observeEvent(input$button_click, {
     
-    history = nwmHistoric::readNWMdata(x)
+    history = nwmHistoric::readNWMdata(pt$comid)
     
     
     showModal(modalDialog(
@@ -114,6 +114,7 @@ server <- function(input, output,session) {
       }),
       downloadButton('foo', label = "Download PNG"),
       downloadButton('foo2', label = "Download CSV"),
+      downloadButton('foo3', label = "Download RDS"),
       size = "l", easyClose = TRUE
     ))
   })
@@ -132,9 +133,13 @@ server <- function(input, output,session) {
     filename = paste0('historic_nwm_comid_', pt$comid,'.csv'),
     content = function(file) {
       write.csv(history, file)
-    }
-  )
-  
+    })
+    
+    output$foo3 = downloadHandler(
+      filename = paste0('historic_nwm_comid_', pt$comid, '.rds'),
+      content = function(file) {
+        saveRDS(history, file)
+      })
 }
 
 shinyApp(ui, server)

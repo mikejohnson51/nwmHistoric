@@ -4,7 +4,7 @@
 \alias{retro_call}
 \title{Retro Call Meta Data}
 \usage{
-retro_call(comid = NULL, startDate = NULL, endDate = NULL)
+retro_call(comid = NULL, startDate = "1993-01-01", endDate = "2018-12-31")
 }
 \arguments{
 \item{comid}{an NHD COMID}

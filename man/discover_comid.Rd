@@ -4,16 +4,16 @@
 \alias{discover_comid}
 \title{Discover NHD COMID}
 \usage{
-discover_comid(pt, lat, lon, sf = FALSE)
+discover_comid(AOI, sf = FALSE)
 }
 \arguments{
+\item{sf}{return the COMID (FALSE) or spatial catchment object (TRUE)}
+
 \item{pt}{a sf point object}
 
 \item{lat}{a numeric latitude}
 
 \item{lon}{a numeric longitude}
-
-\item{sf}{return the COMID (FALSE) or spatial catchment object (TRUE)}
 }
 \value{
 a sf object or numeric COMID

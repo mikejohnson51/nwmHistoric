@@ -6,7 +6,7 @@
 #' @param endDate an end date (YYYY-MM-DD)
 #' @return data.frame
 #' @importFrom RNetCDF open.nc var.get.nc close.nc
-#' @importFrom dplyr mutate
+#' @importFrom dplyr mutate bind_rows
 #' @importFrom foreach %dopar% foreach
 #' @importFrom parallel detectCores
 #' @importFrom doParallel registerDoParallel
@@ -14,52 +14,48 @@
 
 readNWMdata = function(comid = NULL, 
                        siteNumber = NULL,
-                       startDate = NULL,
-                       endDate = NULL) {
+                       startDate = "1993-01-01",
+                       endDate = "2018-01-01",
+                       version ="2") {
   
+  hydroshare = 'http://thredds.hydroshare.org/thredds/dodsC/nwm_retrospective/'
+  
+  baseURL = paste0(hydroshare, ifelse(version == "2", 'nwm_v2_retro_full.ncml', 'nwm_retro_full.ncml'))
+
   if(!is.null(siteNumber)){comid = gage_lu$comid[match(siteNumber,gage_lu$gages)]}
 
   urls <- retro_call(comid, startDate, endDate) 
   
   if(!is.null(urls)){
 
-  time <- hour_seq(urls$startDate[1], urls$endDate[1])
+    time <- hour_seq(urls$startDate[1], urls$endDate[1])
+    nc = open.nc(baseURL)  
+    all = list()
   
-  `%dopar%` <- foreach::`%dopar%`
-  no_cores  <- parallel::detectCores() - 1
-  doParallel::registerDoParallel(no_cores)
-  
-  res = foreach::foreach(i = 1:nrow(urls) , .combine = rbind) %dopar% {
-        try({
-          nc = open.nc(urls$url[i])
-          var = nc %>% var.get.nc("streamflow") 
-          close.nc(nc)
-          
-          data.frame(
-            model = "NWM20",
-            comid = urls$COMID[i],
-            time_utc  = as.POSIXlt(time),
-            flow  = var) 
-        })
+    for(i in 1:nrow(urls)){
+       var = var.get.nc(nc, "streamflow",
+                               start = c(urls$startIndex[i], urls$index[i]),
+                               count = c(urls$count[i],1),
+                               unpack = TRUE)
+
+              all[[i]] = data.frame(
+                model = "NWM20",
+                comid = urls$COMID[i],
+                time_utc  = as.POSIXlt(time),
+                flow  = var)
+    
   }
   
-  if(!is.null(siteNumber)){
-    res$siteNumber = siteNumber
-  }
+  close.nc(nc)
   
-  res %>% as_tibble()
+  res = dplyr::bind_rows(all)
+  
+  if(!is.null(siteNumber)){ res$siteNumber = siteNumber}
+  
+  res
   
   } else {
     NULL
   }
-}
-
-add_time = function(rawData) {
-  rawData %>% mutate(
-    year  = format(time_utc, "%Y"),
-    month = format(time_utc, "%m"),
-    day   = format(time_utc, "%d"),
-    hour  = format(time_utc, "%H")
-  )
 }
 

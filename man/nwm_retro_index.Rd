@@ -5,7 +5,9 @@
 \alias{nwm_retro_index}
 \title{Index Files
 Dataset containing index information for NWM access}
-\format{An object of class \code{data.frame} with 273 rows and 3 columns.}
+\format{
+An object of class \code{data.frame} with 273 rows and 3 columns.
+}
 \usage{
 nwm_retro_index
 }

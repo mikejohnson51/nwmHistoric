@@ -5,7 +5,9 @@
 \alias{gage_lu}
 \title{COMID to NWIS ID lookup
 Dataset containing index information for NWIS access}
-\format{An object of class \code{data.frame} with 7541 rows and 2 columns.}
+\format{
+An object of class \code{data.frame} with 7541 rows and 2 columns.
+}
 \usage{
 gage_lu
 }

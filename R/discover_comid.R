@@ -6,26 +6,24 @@
 #' @return a sf object or numeric COMID
 #' @export
 
-discover_comid = function(pt, lat, lon, sf = FALSE){
+discover_comid = function(AOI,  sf = FALSE){
   
-  if(!is.null(pt)){
-    coords <- sf::st_transform(pt, 4269) %>% 
-      sf::st_coordinates()
-    coords <-  data.frame(lat = coords[2], lon = coords[1])
+  
+  if(sf::st_geometry_type(AOI) == "POINT"){
+    coords <- sf::st_transform(AOI, 4269) %>% sf::st_coordinates()
+    bbox = paste(coords[2], coords[1], coords[2] + 1e-05, coords[1] + 1e-05, "urn:ogc:def:crs:EPSG:4269", sep = ",")
   }  else {
-    coords <-  data.frame(lat = lat, lon = lon)
+    coords = sf::st_transform(AOI, 4269) %>% sf::st_bbox()
+    bbox = paste(coords[2], coords[1], coords[4], coords[3], "urn:ogc:def:crs:EPSG:4269", sep = ",")
   }
   url_base <- paste0("https://cida.usgs.gov/nwc/geoserver/nhdplus/ows", 
                      "?service=WFS", "&version=1.0.0", "&request=GetFeature", 
                      "&typeName=nhdplus:catchmentsp", "&outputFormat=application%2Fjson", 
                      "&srsName=EPSG:4269")
   
-  url <- paste0(url_base, 
-                "&bbox=", 
-                paste(coords$lat, coords$lon, coords$lat + 1e-05, coords$lon + 1e-05, "urn:ogc:def:crs:EPSG:4269", sep = ","))
+  url <- paste0(url_base, "&bbox=", bbox)
   
   content <- httr::RETRY("GET", url, times = 3, pause_cap = 60)
-  
   
   if (content$status_code == 200) {
     out = tryCatch(

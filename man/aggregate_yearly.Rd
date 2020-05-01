@@ -4,7 +4,7 @@
 \alias{aggregate_yearly}
 \title{Aggregate Hourly Data to Yearly Values}
 \usage{
-aggregate_yearly(rawData, FUN, na.rm = TRUE)
+aggregate_yearly(rawData, FUN = "mean", na.rm = TRUE)
 }
 \arguments{
 \item{rawData}{data extracted with \code{readNWMdata}}
