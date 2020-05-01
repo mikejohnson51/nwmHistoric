@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
 # nwmHistoric <img src="man/figures/logo.png" width=180 height = 40 align="right" />
 
 <!-- badges: start -->
+[![Travis build status](https://travis-ci.org/mikejohnson51/nwmHistoric.svg?branch=master)](https://travis-ci.org/mikejohnson51/nwmHistoric)
 <!-- badges: end -->
 
 ## Installation

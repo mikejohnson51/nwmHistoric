@@ -100,6 +100,6 @@ Blodgett](https://www.usgs.gov/staff-profiles/david-l-blodgett?qt-staff_profile_
 # Support:
 
 This effort is supported by the Consortium of Universities for the
-Advancement of Hydrologic Science, Inc. under the HydroInformatics
+Advancement of Hydrologic Science, Inc. under the HydroInformatics
 Fellowship. See program
 [here](https://www.cuahsi.org/data-models/hydroinformatics-innovation-fellowship/)
