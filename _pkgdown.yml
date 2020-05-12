@@ -1,0 +1,25 @@
+title: "National Water Model"
+url: https://github.com/mikejohnson51/nwmHistoric
+template:
+  package: miketheme
+navbar:
+  left:
+    - icon: fa-home
+      href: index.html
+    - icon:  fa-file-code-o
+      text: "Reference"
+      href: reference/index.html
+    - text: "Articles"
+      icon: fas fa-book
+      menu:
+      -  text: API
+         href: articles/API.html
+      -  text: Getting Data
+         href: articles/Getting_Data.html
+      -  text: Data Aggregators
+         href: articles/aggregate.html
+
+
+
+
+

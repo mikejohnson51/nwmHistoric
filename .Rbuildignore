@@ -1,5 +1,12 @@
-^LICENSE\.md$
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^README\.Rmd$
-^\.travis\.yml$
+LICENSE
+.travis.yml
+inst/doc/*.html
+docs
+_pkgdown.yml
+^doc$
+.Renviron
+pkgdown
+README.rmd
+^Meta$

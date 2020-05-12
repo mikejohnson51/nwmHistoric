@@ -1,0 +1,197 @@
+---
+title: "Forecast Location Discovery"
+output: 
+  rmarkdown::html_vignette:
+vignette: >
+  %\VignetteIndexEntry{Getting_Data}
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 4,
+  #eval=nzchar(Sys.getenv("BUILD_VIGNETTES"))
+  warning = FALSE,
+  message = FALSE
+)
+
+oldoption <- options(scipen = 9999)
+options(scipen = 9999)
+
+library(ggplot2)
+library(viridis)
+library(gridExtra)
+```
+
+## TL;DR
+
+The nwmHistoric package provides utilities for finding NHD comids, NWIS gages IDs, and NHD geometries
+
+```{r, eval = FALSE}
+# Define a simple featrues POINT
+pt = AOI::geocode("Goleta", pt = T)
+
+# Define a simple featrues POLYGON
+area =  AOI::aoi_get(list("UCSB", 10, 10)) 
+
+# Discover NHD comid by point
+discover_nhd(pt)
+
+# Discover NHD comid(s) by area
+discover_nhd(area)
+
+# Discover NHD comid(s) by area and return geometry
+# Users can select outlet, flowline, or catchment realizations
+discover_nhd(area, "flowline")
+
+# Find NWIS gages with collocated NWM flow flowcasts 
+discover_nwis(area)
+
+```
+
+## COMID Identification
+
+### Point Search
+
+Often users don't know the NHD identifier they need. Across the `R` ecosystem there are utilities for identifying spatial regions of interest and geocoding (`mikejohnson51/AOI`) and discovering catchments identifiers by lat/lng (`nhdplusTools` package)
+
+Here, we offer a function - `discover_nhd` - that mirrors the functionality of `nhdplusTools::discover_nhdplus_id` for finding the NHDPlus catchment containing a defined point location:
+
+```{r}
+library(AOI)
+library(nwmHistoric)
+library(nhdplusTools)
+
+# Create POINT object by geocoding "UCSB"
+pt = AOI::geocode("Goleta", pt = T)
+
+# COMID using nhdplusTools
+(id2 = nhdplusTools::discover_nhdplus_id(pt))
+
+# COMID using nwmHistoric
+(id = discover_nhd(pt))
+```
+
+## Area Search
+
+`discover_nhd` extends the search capabilities from point objects to polygon (areal) extents using the [National Water Census Geoserver](https://cida.usgs.gov/nwc/geoserver).
+
+```{r}
+# AOI defined by the 10x10 mile area surrounding UCSB
+AOI = AOI::aoi_get(list("UCSB", 10, 10)) 
+
+# Find COMIDS
+(ids = discover_nhd(AOI))
+```
+
+## Finding NWIS Streamgages
+
+Analogous functionality for finding USGS NWIS site numbers is provided with `discover_nwis`.
+
+IMPORTANT:: This function only returns NWIS sites that record streamflow (USGS param code '00060') and are collocated with an NHD COMID represented in the NWM.
+
+```{r}
+nwis = discover_nwis(AOI)
+head(nwis)
+```
+
+## NHD Realizations
+
+The NHDPlusV2 data model loosely conforms to the HY_Features Conceptual Model
+with a [mapping](https://github.com/opengeospatial/HY_Features/wiki/HY_Features-NHDPlus-Mapping) shared here.
+`nwmHistoric` extends the ability of `discover_nhd` to retrieving catchment, flowline, or outlet geometries.
+
+```{r}
+# Return Catchment boundaries
+catch = discover_nhd(AOI, feature = "catchment")
+(catch[1,])
+
+# Return Flowline paths
+fl    = discover_nhd(AOI, feature = "flowline")
+(fl[1,])
+
+# Return outlet locations
+out   = discover_nhd(AOI, feature = "outlet")
+(out[1,])
+```
+
+```{r, echo = FALSE}
+ggplot() +
+  geom_sf(data = catch, aes(fill = "Catchment"), color = "black") +
+  geom_sf(data = fl,  aes(color = 'Flowline'), show.legend  = "line") +
+  geom_sf(data = out, aes(color = 'Outlet'),show.legend  = "point") + 
+  geom_sf(data = nwis, aes(color = 'NWIS'),show.legend = "point")+
+  scale_fill_manual(values = c("Catchment" = "gray99"), 
+                    guide = guide_legend(override.aes = list(linetype = 1, border = "solid", shape = NA))) +
+  scale_colour_manual(values = c("Flowline" = "blue","Outlet" = "red", "NWIS" = "green"), guide = guide_legend(override.aes = list(linetype = c("solid", "blank", "blank"), shape = c(NA,16,16)))) + theme_minimal() +
+  theme(legend.position = 'bottom') +
+  labs(fill = "", color = "")
+```
+
+
+
+## Putting it all together
+
+Lets look at one last simple example that has huge implications for water resource reach. The aim is to identify a self-contained (e.g watershed) catchment and extract forecasts streamflows along the mainstem for 2015.
+
+### Tracing Basins
+
+A key feature of the `nhdplusTools` package is network tracing via the Network Linked Data Index. These capabilities allow users to define a starting point, and traverse the network to find the upstream (or downstream) flow lines and indexed elements. 
+
+Here we use the NLDI tools to trace a upstream network and the `nwmHistoric` to extract the relevant streamflow forecasts from the NWM version 2.0.
+
+```{r}
+# Start with a nwis site ID
+nldi_feature <- list("nwissite", "USGS-05428500") 
+
+# Find the Upper Mainstem
+um    = navigate_nldi(nldi_feature, mode = "UM") 
+
+# Use the UM comids to query NWM flows for 2015
+flows = readNWMdata(comid = um$nhdplus_comid, 
+                    startDate = "2015-01-01", 
+                    endDate = "2015-12-31")
+
+# For visualization we also retrive the basin boundary and upper tributrary
+
+# Find the Upper Tributrary
+ut    = navigate_nldi(nldi_feature, mode = "UT") 
+# Find the UT basin boundary
+basin = get_nldi_basin(nldi_feature)
+```
+
+```{r, echo = FALSE, fig.width=7.5, fig.height=4}
+# nwmHistric find_outlets functions finds outlets from a flowpath representation
+um_outlets = find_outlets(um)
+um_outlets$order = factor(nrow(um_outlets):1)
+
+# Make a map
+g1 = ggplot() +
+  geom_sf(data = basin, col = 'gray90') +
+  geom_sf(data = um, col = 'blue') + 
+  geom_sf(data = ut, col = 'lightblue', size = .5) + 
+  geom_sf(data = um_outlets, aes(color = order), size = 1.25) + 
+  scale_color_manual(values= viridis(24)) +
+  theme_minimal() + 
+  theme(legend.position = "NA")
+
+# Plots the flows
+g2 = ggplot(data = flows, aes(x = time, y = flow, color = comid)) +
+  geom_line(size = .25) + 
+  scale_color_manual(values= viridis(24)) +
+  theme_minimal() + 
+  labs(y = "Qsim (cms)",
+       x = paste0("DateTime (", base::format(flows$ymd[1], format="%Z"), ")"), 
+       title = paste(flows$model[1],"Flow Records")) +
+  theme(legend.position = 'NA')
+
+grid.arrange(g1,g2, nrow = 1)
+```
+
+```{r teardown, include=FALSE}
+options(oldoption)
+```

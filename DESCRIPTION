@@ -1,5 +1,5 @@
 Package: nwmHistoric
-Title: Access National Water Model Historic Data
+Title: National Water Model Historic Data
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "Mike", family = "Johnson", role = c("aut", "cre"), email = "jmj00@ucsb.edu", comment = c(ORCID = "0000-0002-5288-8350"))
@@ -7,19 +7,35 @@ Maintainer: Mike Johnson <jmj00@ucsb.edu>
 Depends:
     R(>= 3.5.0)
 Imports:
-    RNetCDF,
     dplyr,
-    doParallel,
-    foreach,
-    magrittr
-Description: What the package does (one paragraph).
+    fastmatch,
+    httr,
+    lubridate,
+    magrittr,
+    RNetCDF,
+    sf,
+    xml2,
+    utils
+Description: Provides an API to query NWM reanalyis data by NHDPlus Catchment and USGS NWIS Gage. 
+    Package also features tools for identifying NHDcatchment Identifiers and returning multi-realization 
+    (outlet, flowpath, cathcment) spatial representations. Finally simple tools for aggrgating hourly data to other time chunks are provided.
 License: CC0
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.0
 Suggests: 
+    AOI, 
+    dataRetrieval,
+    ggplot2,
+    ggridges,
+    gridExtra,
+    GSODR,
     knitr,
-    rmarkdown
+    nhdplusTools,
+    rmarkdown,
+    spelling,
+    viridis
 VignetteBuilder: knitr
 URL: https://github.com/mikejohnson51/nwmHistoric
 BugReports: https://github.com/mikejohnson51/nwmHistoric/issues
+Language: en-US

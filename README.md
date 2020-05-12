@@ -1,92 +1,27 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# nwmHistoric <img src="man/figures/logo.png" width=180 height = 40 align="right" />
+# nwmHistoric
 
 <!-- badges: start -->
 
+[![Travis build
+status](https://travis-ci.org/mikejohnson51/nwmHistoric.svg?branch=master)](https://travis-ci.org/mikejohnson51/nwmHistoric)
 <!-- badges: end -->
 
 ## Installation
 
-    #> Loading nwmHistoric
-    #> 
-    #> Attaching package: 'dplyr'
-    #> The following objects are masked from 'package:stats':
-    #> 
-    #>     filter, lag
-    #> The following objects are masked from 'package:base':
-    #> 
-    #>     intersect, setdiff, setequal, union
-
-## Basic use
-
-Lets find the historic flows nearest my home:
-
 ``` r
-
-pt  = AOI::geocode('University of Alabama', pt = TRUE) 
-comid = discover_comid(pt)
-nhd = HydroData::findNHD(comid = comid)
-#> Returned object contains: 1 nhd flowlines
-
-aoi_map(pt, returnMap = TRUE) %>% addPolylines(data = nhd$nhd)
-#> Warning: sf layer has inconsistent datum (+proj=longlat +ellps=GRS80 +towgs84=0.0,0.0,0.0,0.0,0.0,0.0,0.0 +no_defs).
-#> Need '+proj=longlat +datum=WGS84'
+remotes::install_github('mikejohnson51/nwmHistoric')
 ```
 
-<img src="man/figures/README-unnamed-chunk-3-1.png" width="75%" />
+# Features
 
-``` r
-out = readNWMdata(comid = comid)
-
-head(out)
-#> # A tibble: 6 x 4
-#>   model    comid time_utc             flow
-#>   <fct>    <int> <dttm>              <dbl>
-#> 1 NWM20 18228721 1993-01-01 00:00:00     0
-#> 2 NWM20 18228721 1993-01-01 01:00:00     0
-#> 3 NWM20 18228721 1993-01-01 02:00:00     0
-#> 4 NWM20 18228721 1993-01-01 03:00:00     0
-#> 5 NWM20 18228721 1993-01-01 04:00:00     0
-#> 6 NWM20 18228721 1993-01-01 05:00:00     0
-dim(out)
-#> [1] 219144      4
-```
-
-``` r
-
-sub = readNWMdata(comid = comid, 
-startDate = "2017-01-01", 
-endDate = "2017-12-31")
-
-head(sub)
-#> # A tibble: 6 x 4
-#>   model    comid time_utc             flow
-#>   <fct>    <int> <dttm>              <dbl>
-#> 1 NWM20 18228721 2017-01-01 00:00:00     0
-#> 2 NWM20 18228721 2017-01-01 01:00:00     0
-#> 3 NWM20 18228721 2017-01-01 02:00:00     0
-#> 4 NWM20 18228721 2017-01-01 03:00:00     0
-#> 5 NWM20 18228721 2017-01-01 04:00:00     0
-#> 6 NWM20 18228721 2017-01-01 05:00:00     0
-dim(sub)
-#> [1] 8760    4
-
-sub_summary = sub %>% aggregate_monthly(FUN = c("max", "mean", "min"))
-sub = reshape2::melt(sub_summary, c('comid', "time_utc"))
-
-
-ggplot(data = sub, aes(x = time_utc, y = value, color = variable)) +
-  geom_line() + 
-  labs(title = paste0("2017 Monthly Mean COMID: ", comid),
-       x = "Date",
-       y = "Streamflow (cms)",
-       color = "Aggragation") +
-  theme_bw() 
-```
-
-<img src="man/figures/README-unnamed-chunk-4-1.png" width="75%" />
+  - Access Historic NWM Reanalyis timeseries data by feature for
+    versions 1.2 and 2.0
+  - Data requests can be subset temporally, and adjsted for timezone
+  - Functions for finding appropriate NHD and NWIS Identifiers
+  - Family of aggregate functions to groups and summarise data
 
 # Collaborators:
 
@@ -95,11 +30,11 @@ ggplot(data = sub, aes(x = time_utc, y = value, color = variable)) +
 [David
 Blodgett](https://www.usgs.gov/staff-profiles/david-l-blodgett?qt-staff_profile_science_products=3#qt-staff_profile_science_products)
 
-[Pat Johnson](https://overdodactyl.github.io/)
-
 # Support:
 
 This effort is supported by the Consortium of Universities for the
-Advancement of Hydrologic Science, Inc. under the HydroInformatics
+Advancement of Hydrologic Science, Inc. under the HydroInformatics
 Fellowship. See program
 [here](https://www.cuahsi.org/data-models/hydroinformatics-innovation-fellowship/)
+
+<img src="man/figures/logo.png" width=180 height = 40 align="right" />

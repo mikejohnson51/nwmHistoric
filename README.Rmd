@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# nwmHistoric <img src="man/figures/logo.png" width=180 height = 40 align="right" />
+# nwmHistoric
 
 <!-- badges: start -->
 [![Travis build status](https://travis-ci.org/mikejohnson51/nwmHistoric.svg?branch=master)](https://travis-ci.org/mikejohnson51/nwmHistoric)
@@ -21,58 +21,16 @@ knitr::opts_chunk$set(
 
 ## Installation
 
-```{r, echo = FALSE}
-## Currently Private
-## remotes::install_github('mikejohnson51/nwmHistoric')
-
-devtools::load_all()
-library(dplyr)
-library(ggplot2)
-library(AOI)
-library(nwmHistoric)
-library(leaflet)
+```{r, eval = FALSE}
+remotes::install_github('mikejohnson51/nwmHistoric')
 ```
 
+# Features
 
-## Basic use
-
-Lets find the historic flows nearest my home:
-
-```{r}
-
-pt  = AOI::geocode('University of Alabama', pt = TRUE) 
-comid = discover_comid(pt)
-nhd = HydroData::findNHD(comid = comid)
-
-aoi_map(pt, returnMap = TRUE) %>% addPolylines(data = nhd$nhd)
-out = readNWMdata(comid = comid)
-
-head(out)
-dim(out)
-```
-
-```{r}
-
-sub = readNWMdata(comid = comid, 
-startDate = "2017-01-01", 
-endDate = "2017-12-31")
-
-head(sub)
-dim(sub)
-
-sub_summary = sub %>% aggregate_monthly(FUN = c("max", "mean", "min"))
-sub = reshape2::melt(sub_summary, c('comid', "time_utc"))
-
-
-ggplot(data = sub, aes(x = time_utc, y = value, color = variable)) +
-  geom_line() + 
-  labs(title = paste0("2017 Monthly Mean COMID: ", comid),
-       x = "Date",
-       y = "Streamflow (cms)",
-       color = "Aggragation") +
-  theme_bw() 
-```
-
+ * Access Historic NWM Reanalyis timeseries data by feature for versions 1.2 and 2.0
+ * Data requests can be subset temporally, and adjsted for timezone
+ * Functions for finding appropriate NHD and NWIS Identifiers
+ * Family of aggregate functions to groups and summarise data
 
 # Collaborators:
 
@@ -80,8 +38,9 @@ ggplot(data = sub, aes(x = time_utc, y = value, color = variable)) +
 
 [David Blodgett](https://www.usgs.gov/staff-profiles/david-l-blodgett?qt-staff_profile_science_products=3#qt-staff_profile_science_products)
 
-[Pat Johnson](https://overdodactyl.github.io/)
-
 # Support:
 
+
 This effort is supported by the Consortium of Universities for the Advancement of Hydrologic Science, Inc. under the HydroInformatics Fellowship. See program [here](https://www.cuahsi.org/data-models/hydroinformatics-innovation-fellowship/)
+
+ <img src="man/figures/logo.png" width=180 height = 40 align="right" />
