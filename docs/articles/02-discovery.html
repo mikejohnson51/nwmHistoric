@@ -170,21 +170,7 @@
 <a href="#finding-nwis-gages" class="anchor"></a>Finding NWIS gages</h3>
 <p>Analogous functionality for finding USGS NWIS site IDs is provided with <code>discover_nwis</code>. This function only returns NWIS sites that record streamflow (USGS parameter code ‘00060’) and are collocated with an NHD catchment represented in the NWM.</p>
 <div class="sourceCode" id="cb3"><html><body><pre class="r">(<span class="no">nwis</span> <span class="kw">=</span> <span class="fu"><a href="../reference/discover_nwis.html">discover_nwis</a></span>(<span class="no">AOI</span>))
-<span class="co">#&gt; Simple feature collection with 4 features and 5 fields</span>
-<span class="co">#&gt; geometry type:  POINT</span>
-<span class="co">#&gt; dimension:      XY</span>
-<span class="co">#&gt; bbox:           xmin: -119.8118 ymin: 34.42472 xmax: -119.7118 ymax: 34.45916</span>
-<span class="co">#&gt; CRS:            EPSG:4269</span>
-<span class="co">#&gt;   agency_cd  site_no                                      station_nm site_type</span>
-<span class="co">#&gt; 1      USGS 11120000                       ATASCADERO C NR GOLETA CA        ST</span>
-<span class="co">#&gt; 2      USGS 11120500                         SAN JOSE C NR GOLETA CA        ST</span>
-<span class="co">#&gt; 3      USGS 11119940 MARIA YGNACIO C A UNIVERSITY DRIVE NR GOLETA CA        ST</span>
-<span class="co">#&gt; 4      USGS 11119745  MISSION C A ROCKY NOOK PARK A SANTA BARBARA CA        ST</span>
-<span class="co">#&gt;                     geometry    comid</span>
-<span class="co">#&gt; 1 POINT (-119.8118 34.42472) 17595429</span>
-<span class="co">#&gt; 2  POINT (-119.809 34.45916) 17596109</span>
-<span class="co">#&gt; 3   POINT (-119.8037 34.445) 17596111</span>
-<span class="co">#&gt; 4 POINT (-119.7118 34.44055) 17595453</span></pre></body></html></div>
+<span class="co">#&gt; Error in discover_nwis(AOI): No gages found in this AOI.</span></pre></body></html></div>
 </div>
 </div>
 <div id="geometric-discovery" class="section level2">
@@ -199,14 +185,14 @@
 
 <span class="co"># Return outlets</span>
 <span class="no">out</span>   <span class="kw">=</span> <span class="fu"><a href="../reference/discover_nhd.html">discover_nhd</a></span>(<span class="no">AOI</span>, <span class="kw">feature</span> <span class="kw">=</span> <span class="st">"outlet"</span>)</pre></body></html></div>
-<p><img src="02-discovery_files/figure-html/unnamed-chunk-6-1.png" width="576"></p>
+<pre><code>#&gt; Error in fortify(data): object 'nwis' not found</code></pre>
 </div>
 <div id="putting-it-all-together" class="section level2">
 <h2 class="hasAnchor">
 <a href="#putting-it-all-together" class="anchor"></a>Putting it all together</h2>
 <p>Lets look at one integrative example. The aim is to identify a self-contained (e.g watershed) catchment and extract reanalysis records along the mainstem for 2015. The <code>nhdplusTools</code> package provides an interface to the Network Linked Data Index which allow users to define a starting point (as a USGS siteID or NHDPlus COMID), and traverse the hydrographic network to find the upstream (or downstream) geometries and indexed elements.</p>
 <p>Here we use the NLDI to trace the upstream network and the <code>nwmHistoric</code> to extract the relevant streamflow forecasts.</p>
-<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">nhdplusTools</span>)
+<div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">nhdplusTools</span>)
 
 <span class="co"># Start with a nwis site ID</span>
 <span class="no">nldi_feature</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="st">"nwissite"</span>, <span class="st">"USGS-05428500"</span>)
