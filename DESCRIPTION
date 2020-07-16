@@ -17,7 +17,7 @@ Imports:
     sf,
     xml2,
     utils
-Description: Provides an API to query NWM reanalyis data by NHDPlus Catchment and USGS NWIS Gage. 
+Description: Programmatic interface to the National Water Model historic data. Provides an API to query NWM reanalyis data by NHDPlus Catchment and USGS NWIS Gage. 
     Package also features tools for identifying NHDcatchment Identifiers and returning multi-realization 
     (outlet, flowpath, cathcment) spatial representations. Finally simple tools for aggrgating hourly data to other time chunks are provided.
 License: CC0
@@ -30,7 +30,6 @@ Suggests:
     ggplot2,
     ggridges,
     gridExtra,
-    GSODR,
     knitr,
     nhdplusTools,
     rmarkdown,

@@ -75,5 +75,3 @@ add_waterYear = function(dateVec){
     waterYear[whichPastOct] <- calYear[whichPastOct] + 1
     return(waterYear)
 }
-
-

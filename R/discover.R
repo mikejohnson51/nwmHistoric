@@ -62,7 +62,7 @@ discover_nhd = function(AOI, feature = NULL) {
       "&bbox=", 
       bbox)
   
-  content <- RETRY("GET", url, times = 3, timeout(5))
+  content <- RETRY("GET", url, times = 3)
   
   if (content$status_code == 200) {
     out = tryCatch(
@@ -87,7 +87,9 @@ discover_nhd = function(AOI, feature = NULL) {
   } else {
     if (AOI.type == 'POINT' && feature != "catchment") {
       out = paste0('https://labs.waterdata.usgs.gov/api/nldi/linked-data/comid/', out$comid)
-      out = read_sf(out) %>% dplyr::select(comid)
+      
+      out = read_sf(out) %>% 
+        dplyr::select(comid)
     }
     
     if (feature == 'outlet') { out = find_outlets(out) }
@@ -131,6 +133,7 @@ find_outlets = function(flowlines){
 #' @importFrom fastmatch fmatch
 #' @importFrom sf st_as_sf st_bbox
 #' @importFrom dplyr filter
+#' @importFrom xml2 read_xml
 #' @export
 
 discover_nwis = function(AOI = NULL){

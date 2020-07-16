@@ -4,6 +4,6 @@
 .Ruserdata
 old
 .DS_Store
-inst/doc
+inst
 doc
-Meta
+data-pub

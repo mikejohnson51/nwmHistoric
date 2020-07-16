@@ -5,6 +5,8 @@
 \title{Aggregate by Julien Day}
 \usage{
 aggregate_j(rawData, fun = "mean", na.rm = TRUE)
+
+aggregate_j(rawData, fun = "mean", na.rm = TRUE)
 }
 \arguments{
 \item{rawData}{data extracted with \code{readNWMdata}}
@@ -46,6 +48,21 @@ s95 = aggregate_s(flows, fun = function(x){quantile(x,.95)})
 }
 }
 \seealso{
+Other aggregate functions: 
+\code{\link{aggregate_dowy}()},
+\code{\link{aggregate_m}()},
+\code{\link{aggregate_record}()},
+\code{\link{aggregate_s}()},
+\code{\link{aggregate_wymd}()},
+\code{\link{aggregate_wym}()},
+\code{\link{aggregate_wys}()},
+\code{\link{aggregate_wy}()},
+\code{\link{aggregate_yj}()},
+\code{\link{aggregate_ymd}()},
+\code{\link{aggregate_ym}()},
+\code{\link{aggregate_ys}()},
+\code{\link{aggregate_y}()}
+
 Other aggregate functions: 
 \code{\link{aggregate_dowy}()},
 \code{\link{aggregate_m}()},

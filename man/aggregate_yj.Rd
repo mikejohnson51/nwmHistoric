@@ -2,7 +2,7 @@
 % Please edit documentation in R/aggregate.R
 \name{aggregate_yj}
 \alias{aggregate_yj}
-\title{Aggregate by Year-Month}
+\title{Aggregate by Year-Julien Day}
 \usage{
 aggregate_yj(rawData, fun = "mean", na.rm = TRUE)
 }

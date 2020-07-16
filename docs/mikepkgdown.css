@@ -1,4 +1,4 @@
-#tocnav > ul > li.active > a {
+tocnav > ul > li.active > a {
     background: #037b91;
 }
 
@@ -10,15 +10,15 @@
 }
 
 
-#tocnav .nav li ul li a:before {
+tocnav .nav li ul li a:before {
     content: "\2022   " !important;
 }
 
-#tocnav .nav li ul li a {
+tocnav .nav li ul li a {
   padding-left: 45px
 }
 
-#tocnav ul li a:before {
+tocnav ul li a:before {
     content: "" !important;
 }
 

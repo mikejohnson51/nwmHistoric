@@ -4,14 +4,12 @@ library(sf)
 library(ggplot2)
 library(dplyr)
 library(shinycustomloader)
-devtools::load_all()
 
 make_plots = function(x){
   
-  vals = x %>%
-    aggregate_daily()
+  vals = aggregate_ymd(x)
 
-  p = ggplot(data = vals, aes(x = time_utc, y = flow)) +
+  p = ggplot(data = vals, aes(x = ymd, y = flow)) +
     geom_line(size = .1) +
     labs(x = 'Date', y = 'Streamflow (cms)') +
     theme_classic()
@@ -23,13 +21,7 @@ pt = NULL
 lat  =  29.93038
 lon  = -95.37706
 
-ui <- (
-  fluidPage(
-    titlePanel('NWM v2.0 Reanalysis: Tester'),
-    tags$style(type = "text/css", "#map {height: calc(100vh - 80px) !important;}"),
-    leafletOutput('map') %>% withLoader(loader="pacman")
-  )
-)
+
 
 server <- function(input, output,session) {
   
@@ -88,17 +80,46 @@ server <- function(input, output,session) {
     pt$osm_id = rev$osm_id
     pt$osm_type = rev$osm_type
     pt$name = rev$display_name
-    pt$comid = discover_comid(pt)
+    pt$comid = discover_nhd(pt)
+
+    data = find_nhd(pt$comid)
+    
+    ms <- data$flowpath %>% 
+      sf::st_cast("POINT") %>% 
+      group_by(comid) %>% 
+      slice(n())
+    
+    siteID <- ms %>%
+      filter(comid  == comid)
+    
+    make_label = function(x){ paste0("COMID: ", x) }
+    
+    bb <- sf::st_bbox(data$catch) %>% as.numeric()
     
     pt <<- pt 
     
     leafletProxy("map") %>% 
       clearMarkers() %>%
+      clearShapes() %>% 
       addMarkers(data = pt, 
                  layerId = ~comid,
                  popup = paste(leafpop::popupTable(st_drop_geometry(pt), 
                                                    row.numbers = FALSE, 
-                                                   feature.id = FALSE), "</b></br>", actionButton("selectlocation", "Plot this Reach", onclick = 'Shiny.onInputChange(\"button_click\",  Math.random())') ))
+                                                   feature.id = FALSE), "</b></br>", actionButton("selectlocation", "Plot this Reach", onclick = 'Shiny.onInputChange(\"button_click\",  Math.random())') )) %>% 
+      fitBounds( bb[1] - .01, bb[2] - .01, bb[3] + .01, bb[4] + .01) %>% 
+      addPolygons( data = data$catch, 
+                   col = 'gray') %>% 
+      addPolylines(data = data$flowpath,   
+                   col = 'skyblue') %>%
+      # addPolylines(data = data$DM,   
+      #              col = 'skyblue') %>%
+      # addPolylines(data = siteID,
+      #              col = 'blue') %>% 
+      addCircleMarkers(data = siteID, 
+                       radius = 1,
+                       popup = make_label(comid),
+                       col = 'red',
+                       opacity = 1) 
   })
   
   observeEvent(input$button_click, {
@@ -142,4 +163,4 @@ server <- function(input, output,session) {
       })
 }
 
-shinyApp(ui, server)
+

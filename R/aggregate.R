@@ -122,7 +122,7 @@ aggregate_ym  = function(rawData, fun = "mean", na.rm = TRUE){
     mutate(ym = ymd(paste(year, month, sep = "-"), truncated = 1)) 
 }
 
-#' @title Aggregate by Year-Month
+#' @title Aggregate by Year-Julien Day
 #' @inherit aggregate_record description
 #' @inherit aggregate_record details
 #' @inherit aggregate_record examples
@@ -134,6 +134,20 @@ aggregate_yj  = function(rawData, fun = "mean", na.rm = TRUE){
   cols = c("model", 'comid', "year", "julian")
   nwmHistoric_agg(rawData, cols, fun, na.rm) %>% 
     mutate(yj = paste(year, julian, sep = "-")) 
+}
+
+#' @title Aggregate by Julien Day
+#' @inherit aggregate_record description
+#' @inherit aggregate_record details
+#' @inherit aggregate_record examples
+#' @inheritParams aggregate_record
+#' @family aggregate functions
+#' @importFrom dplyr mutate
+#' @export
+aggregate_j  = function(rawData, fun = "mean", na.rm = TRUE){
+  cols = c("model", 'comid', "julian")
+  nwmHistoric_agg(rawData, cols, fun, na.rm) %>% 
+    mutate(j = paste(julian, sep = "-")) 
 }
 
 #' @title Aggregate by Year-Month-Day
