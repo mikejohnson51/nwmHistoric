@@ -125,17 +125,17 @@ find_outlets = function(flowlines){
 }
 
 #' @title Discover USGS NWIS Stream Gages
-#' @description \code{discover_nwis} returns a POINT feature class of NWIS gages reporting parameter code '00060' (streamflow) for an Area of Interest that ALSO report NWM data. 
+#' @description \code{discover_nwis} returns a POINT feature class of active, ST, NWIS gages for an Area of Interest. If a POINT is given as the AOI, a 20km2 bounding box is searched and the nearest feature (euclidian) is returned
 #' Data is accessed through the NWIS web portal.
-#' @param AOI A spatial geometry
+#' @param AOI a sf point or polygon object
 #' @return sf object
 #' @importFrom xml2 xml_root xml_children xml_attr read_xml
 #' @importFrom fastmatch fmatch
-#' @importFrom sf st_as_sf st_bbox
+#' @importFrom sf st_as_sf st_bbox st_nearest_feature
 #' @importFrom dplyr filter
 #' @export
 
-discover_nwis = function(AOI = NULL, on_network = TRUE){
+discover_nwis = function(AOI = NULL){
   
   AOI.type = st_geometry_type(AOI)
   
