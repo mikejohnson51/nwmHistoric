@@ -1,5 +1,5 @@
 #' @title Discover NHD Features
-#' @param AOI a sf point or polyfon object
+#' @param AOI a sf point or polygon object
 #' @param feature if not NULL. What realization of an NHD object should be returned. Options include: catchment, flowline, and outlet.
 #' @importFrom sf st_geometry_type st_transform st_coordinates st_bbox read_sf st_zm
 #' @importFrom httr RETRY timeout
@@ -51,11 +51,11 @@ discover_nhd = function(AOI, feature = NULL) {
   }
   
   url <- paste0(
-      "https://cida.usgs.gov/nwc/geoserver/nhdplus/ows",
+      "https://labs.waterdata.usgs.gov/geoserver/wmadata/ows",
       "?service=WFS",
       "&version=1.0.0",
       "&request=GetFeature",
-      "&typeName=nhdplus:",
+      "&typeName=wmadata:",
       query,
       "&outputFormat=application%2Fjson",
       "&srsName=EPSG:4269",
@@ -133,19 +133,26 @@ find_outlets = function(flowlines){
 #' @importFrom fastmatch fmatch
 #' @importFrom sf st_as_sf st_bbox
 #' @importFrom dplyr filter
-#' @importFrom xml2 read_xml
 #' @export
 
-discover_nwis = function(AOI = NULL){
+discover_nwis = function(AOI = NULL, on_network = TRUE){
+  
+  AOI.type = st_geometry_type(AOI)
+  
+  if(AOI.type == "POINT"){
+    pt = AOI
+    AOI = sf::st_transform(AOI, 5070) %>% sf::st_buffer(20000)
+  }
 
-  bb = round(sf::st_bbox(AOI), 7)
+  bb = sf::st_transform(AOI, 4269)
+  bb = round(sf::st_bbox(bb), 7)
   
   url = paste0("https://waterservices.usgs.gov/nwis/site/?format=mapper&bBox=",
                bb$xmin, ",", 
                bb$ymin, ",", 
                bb$xmax, ",", 
                bb$ymax,
-               "&parameterCd=00060&siteStatus=active")
+               "&siteType=ST&siteStatus=active")
   
   y = tryCatch(
     {read_xml(url) },
@@ -169,10 +176,16 @@ discover_nwis = function(AOI = NULL){
                      lat, lon, stringsAsFactors=FALSE) %>% 
                 st_as_sf(coords = c("lon", "lat"), crs = 4269)
     
-    sites_sf$comid = nwmHistoric::gage_lu$comid[fmatch(sites_sf$site_no, 
-                                                       nwmHistoric::gage_lu$nwis)]
+    if(AOI.type == "POINT"){
+      sites_sf = suppressMessages(
+        sites_sf[sf::st_nearest_feature(pt,sites_sf),]
+      )
+    }
     
-    sites_sf %>% filter(!is.na(comid))
+    # sites_sf$comid = nwmHistoric::gage_lu$comid[fmatch(sites_sf$site_no, 
+    #                                                    nwmHistoric::gage_lu$nwis)]
+    
+    sites_sf #%>% filter(!is.na(comid))
   }
 }
 
