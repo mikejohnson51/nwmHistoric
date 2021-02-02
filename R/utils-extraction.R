@@ -6,7 +6,7 @@
 #' @param tz a user defined timezone  
 #' @param version a user defined model version
 #' @importFrom lubridate ymd_hm with_tz
-#' @importFrom dplyr filter
+#' @importFrom dplyr filter add_row
 #' @return a list containing the model version, NCML path, and time requests
 #' @keywords internal
 
@@ -16,9 +16,6 @@ error.checks = function(startDate, endDate, tz, version){
   if(!tz %in% OlsonNames()){ 
     stop(paste(tz, "not recognized timezone"), call. = F)
   } 
-  
-  startDate = ymd_hm(paste(startDate, "00:00"), tz = tz)
-  endDate   = ymd_hm(paste(endDate,   "23:00"), tz = tz)
   
   ## Top level Folder (OpenDap archive)
   parent <- 'http://thredds.hydroshare.org/thredds/dodsC/nwm_retrospective/'
@@ -87,7 +84,6 @@ error.checks = function(startDate, endDate, tz, version){
 #' @importFrom dplyr filter
 #' @importFrom lubridate ymd_hm with_tz
 #' @importFrom RNetCDF open.nc var.get.nc
-#' @importFrom fastmatch fmatch
 #' @return a data.frame and opend DAP object
 #' @keywords internal
 
@@ -97,12 +93,12 @@ retro_call = function(comid, meta.obj){
   
   if(length(comid) > 0){
   
-  open.dap.file  = open.nc(meta.obj$baseURL)
-  tmp = var.get.nc(open.dap.file, "feature_id")
-  id  = fmatch(comid, tmp)
+  ids_file = open.nc(system.file("extdata", "retro_feature_ids.nc", package = "nwmHistoric"))
+  call = ifelse(meta.obj$version == 2, "feature_ids_v_two", "feature_ids_v_one")
+  id  = match(comid, var.get.nc(ids_file, call))
+  close.nc(ids_file)
 
   if(length(id) > 0){
-    
   ## Model
     all = hour_seq(min(meta.obj$time.requests$model.utc), 
                    max(meta.obj$time.requests$model.utc), "UTC")
@@ -128,7 +124,7 @@ retro_call = function(comid, meta.obj){
     if(nrow(call.meta) > 0 ){
       return(list(rows = nrow(call.meta),
                   call.meta = call.meta, 
-                  open.dap.file = open.dap.file))
+                  open.dap.file = open.nc(meta.obj$baseURL)))
     } else { 
       return(NULL) 
     }
@@ -148,22 +144,17 @@ retro_call = function(comid, meta.obj){
 #' @noRd
 
 extract_thredds = function(i, urls, dap) {
-  var <-  var.get.nc(
-    dap, "streamflow",
-    start = c(urls$startIndex[i],
-              urls$index[i]),
-    count = c(urls$count[i],
-              1),
-    unpack = TRUE)
-  
-  data.frame(
-    model = paste0('NWM', urls$version[i]),
-    comid = urls$COMID[i],
-    time  = hour_seq(urls$startDate[i], 
+  tibble::tibble(
+    model     = paste0('NWM', urls$version[i]),
+    comid     = urls$COMID[i],
+    dateTime  = hour_seq(urls$startDate[i], 
                      urls$endDate[i], 
                      "UTC"),
-    flow  = var,
-    stringsAsFactors = FALSE)
+    flow_cms  = var.get.nc(dap, "streamflow",
+                           start = c(urls$startIndex[i], urls$index[i]),
+                           count = c(urls$count[i], 1),
+                           unpack = TRUE)
+  )
 }
 
 #' @title Time Sequence Generator
@@ -192,6 +183,7 @@ hour_seq  = function(startDate, endDate, tz){
 #' @export
 #' @importFrom magrittr %>%
 #' @usage lhs \%>\% rhs
+
 NULL
 
 

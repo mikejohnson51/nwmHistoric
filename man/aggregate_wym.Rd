@@ -14,6 +14,9 @@ aggregate_wym(rawData, fun = "mean", na.rm = TRUE)
 \item{na.rm}{a logical value indicating whether NA values should be stripped before the computation proceeds.}
 }
 \description{
+Aggregate by Water Year - Month
+}
+\details{
 NWM data is extracted as hourly values.
 
 To aggregate hourly data to different time chunks the nwmHistoric package offers a family of aggregate functions.

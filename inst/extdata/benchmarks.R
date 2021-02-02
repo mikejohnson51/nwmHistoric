@@ -6,15 +6,15 @@ library(ggplot2)
 library(dplyr)
 
 url = 'http://thredds.hydroshare.org/thredds/dodsC/nwm_retrospective/nwm_v2_retro_full.ncml'
+nc = open.nc(url)
+# bb = microbenchmark( 
+#   oc = readNWMdata(comid = 101, startDate = t10, endDate = e10), 
+#   times = 5
+# )
+# 
+# bb
 
-bb = microbenchmark( 
-  oc = readNWMdata(comid = 101, startDate = t10, endDate = e10), 
-  times = 5
-)
 
-bb
-
-saveRDS(df, file = "./data/benchmarks.rds")
 
 allID = var.get.nc(nc,'feature_id')
 
@@ -80,82 +80,41 @@ bb = microbenchmark(
 
 df = data.frame(bb) %>% 
   group_by(expr) %>% 
-  summarise(min_ns = min(time)/1e9,
-            med_ns = median(time)/1e9,
-            max_ns = max(time)/1e9) %>% 
+  mutate(time = time/1e9) %>% 
+  summarise(min_ns = min(time),
+            med_ns = median(time),
+            max_ns = max(time)) %>% 
   ungroup() %>% 
   mutate(g = c(rep(c(1:4), each = 5)),
          g2 = c(rep(c(1,10,15,20,26), 4)),
          ids = c(rep(c(1,10,100,1000), each = 5)),
-          times = c(rep(c(8760,87648,131472,175320,227904 ), 4))) %>% 
+         times = c(rep(c(8760,87648,131472,175320,227904), 4))) %>% 
   mutate(records = ids * times) %>% 
   mutate(rate = records / med_ns)
 
-df$med_ns[2] = 3.1
-df$med_ns[3] = 3.2
-df$med_ns[4] = 3.3
+df$ids2 = factor(paste(scales::comma(df$ids, accuracy = 1), ifelse(df$ids == 1, "COMID", "COMIDs")),
+                  levels = c("1 COMID", paste((c('10','100','1,000')), "COMIDs")))
 
+#saveRDS(df, file = "./data/benchmarks-2.rds")
+df = readRDS("./data/benchmarks-2.rds")
 
-min(df$times*df$ids)
-max(df$times*df$ids)
-min(df$med_ns)
-max(df$med_ns)
-min(df$rate)
-max(df$rate)
-min(df$med_ns)
-
-df$tmp = df$med_ns - 2.5
 m = summary(lm(med_ns ~ times * ids, data = df))
 m2 = summary(lm(med_ns ~ records + ids, data = df))
 
+
+
+
+
 m
 m2
-library(gridExtra)
-grid.arrange(tableGrob(head(df)), g1, nrow = 1)
 
+library(ggplot2)
 
-7.680e-02 / 1.595e-06
-
-plot(
-  (m$coefficients[1,1] + 
-        m$coefficients[2,1]*df$records +
-        m$coefficients[3,1]*df$ids), 
-  df$med_ns
-  )
-abline(0,1)
-
-install.packages('sjPlot')
-
-tab_model(lm(med_ns ~ records + ids, data = df))
-
-g1 = ggplot(data = df, aes(y = ((med_ns - 2.5 )) , x = (times*ids))) +
-  #geom_line(size = .5) + 
-  geom_point() + 
-  ggthemes::theme_clean() +
-  labs(title = 'Transfer Speed (log/log)',
-       color = "") +
-  #facet_grid(ids2 ~., scales = 'free') + 
-  scale_y_continuous(name="Rate (Records / Second)", 
-                     labels = scales::comma) +
-scale_x_continuous(name="Records Requested", labels = scales::comma) +
-  theme(legend.position = "NA",
-        plot.background = element_rect(colour = "white", size=1)
-        ) +
-  coord_trans(x = 'log10',y = 'log10') +
-  annotation_logticks(scaled=FALSE, size = .25) 
-
-g1
-
-
-
-
-df$ids2 = factor(paste(scales::comma(df$ids), ifelse(df$ids == 1, "COMID", "COMIDs")),
-                levels = c("1 COMID", paste((c('10','100','1,000')), "COMIDs")))
 g1 = ggplot(data = df, aes(x = factor(g2), y = med_ns, color = factor(ids2), group = ids2)) +
-  geom_line(size = .5, color = "gray") + 
   geom_point() + 
+  geom_line(size = .5, color = "gray") +
   ggthemes::theme_clean() +
-  labs(title = 'Median Time',
+  labs(title = 'B. Median Time',
        subtitle = 'Seconds',
        x = "Years",
        y = '') + 
@@ -172,7 +131,7 @@ color = factor(ids2), group = ids)) +
   geom_line(size = .5, color = "gray") + 
   geom_point() + 
   ggthemes::theme_clean() +
-  labs(title = 'Median Rate',
+  labs(title = 'C. Median Rate',
        subtitle  = 'Records / Second',
        x = "Years") + 
   facet_grid(ids2 ~ ., scales = "free") + theme(legend.position = "NA")  +
@@ -184,7 +143,7 @@ g3 = ggplot(data = df, aes(x = factor(g2), y = times*ids,
   geom_line(size = .5, color = "gray") + 
   geom_point() + 
   ggthemes::theme_clean() +
-  labs(title = 'Records Requested',
+  labs(title = 'A. Records Requested',
        subtitle  = '',
        x = "Years") + 
   facet_grid(ids2 ~ ., scales = "free") + theme(legend.position = "NA")  +

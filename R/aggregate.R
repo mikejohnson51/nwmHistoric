@@ -1,5 +1,5 @@
 #' @title Aggregate by Record 
-#' @description NWM data is extracted as hourly values. 
+#' @details NWM data is extracted as hourly values. 
 #' 
 #' To aggregate hourly data to different time chunks the nwmHistoric package offers a family of aggregate functions. 
 #' 

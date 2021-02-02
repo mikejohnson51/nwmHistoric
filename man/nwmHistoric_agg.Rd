@@ -4,7 +4,7 @@
 \alias{nwmHistoric_agg}
 \title{Aggregate NWM data usning column and function input}
 \usage{
-nwmHistoric_agg(rawData, cols, fun, na.rm)
+nwmHistoric_agg(rawData, cols, fun, na.rm = TRUE)
 }
 \arguments{
 \item{rawData}{raw data returned from readNWMdata}

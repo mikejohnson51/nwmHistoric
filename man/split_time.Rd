@@ -4,7 +4,7 @@
 \alias{split_time}
 \title{Split Y-M-D-H into time components}
 \usage{
-split_time(rawData)
+split_time(rawData, time_col)
 }
 \arguments{
 \item{rawData}{rasData with time column}

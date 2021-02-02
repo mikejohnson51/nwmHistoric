@@ -5,24 +5,27 @@
 #' @param na.rm logical. Should NA values be removed before appling fun
 #' @param season logical. Should season be added
 #' @param waterYear logical. Should water year be added?
-#' @importFrom dplyr mutate filter group_by_at add_tally summarize_at ungroup
+#' @importFrom dplyr mutate filter group_by_at add_tally summarize_at ungroup vars
 #' @return an aggregated data.frame
 #' @keywords internal
 
 nwmHistoric_agg = function(rawData, cols, 
-                           fun, na.rm ){
+                           fun, na.rm = TRUE ){
  
-  if(!all(c('time', 'flow') %in% names(rawData))){
-    stop("rawData must have columns named flow and time")
+  time_col = grep("dateTime", names(rawData), value = TRUE)
+  flow_col = grep("flow_csm", names(rawData), value = TRUE)
+  
+  if(length(time_col) != 1 | !length(flow_col) != 1){
+    stop("rawData must have a flow and time column")
   }
   
-  df = split_time(rawData)
+  df = split_time(rawData, time_col = time_col)
   
-  if(na.rm)    {df = filter(df, !is.na(flow))}
+  if(na.rm)    {df = filter(df, !is.na(flow_cms))}
   
   group_by_at(df, cols) %>% 
     add_tally(name = 'obs') %>% 
-    summarize_at(vars(flow, obs), fun)  %>% 
+    summarize_at(dplyr::vars(flow_cms, obs), fun)  %>% 
     ungroup()
 }
 
@@ -32,8 +35,9 @@ nwmHistoric_agg = function(rawData, cols,
 #' @importFrom lubridate year month day hour yday
 #' @export
 
-split_time = function(rawData){
+split_time = function(rawData, time_col){
   rawData  %>% mutate(
+         time = get(time_col), 
          year   = year(time),
          month  = month(time),
          day    = day(time),

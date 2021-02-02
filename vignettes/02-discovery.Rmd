@@ -30,7 +30,7 @@ library(nwmHistoric)
 
 ## Feature Identification
 
-The NWM reanalysis product is indexed by feature ID. Identifying ID's is not always easy. `nwmHistoric` provides tools to identify NHD and NWIS IDs using spatial constraints.
+The NWM reanalysis product is indexed by feature ID. Identifying ID's is not always easy. Tools exist in `dataRetirval` and `nhdplusTools` to aid in feautre discovery.
 
 ### Point Search
 
@@ -38,13 +38,15 @@ NHD COMIDs can be determined from point locations as the NHD catchment containin
 
 ```{r}
 library(AOI)
+library(dataRetrieval)
+library(nhdplusTools)
 library(nwmHistoric)
 
 # Create POINT object by geocoding "Goleta"
 (pt = AOI::geocode("Goleta", pt = T))
 
 # Find COMID
-(id = discover_nhd(pt))
+(id = dataRetrieval::findNLDI(location = pt))
 ```
 
 ### Area Search
@@ -56,7 +58,7 @@ library(nwmHistoric)
 (AOI = AOI::aoi_get("Santa Barbara"))
 
 # Find COMIDS
-(ids = discover_nhd(AOI))
+(ids = nhdplusTools::get_nhdplus(AOI)$comid)
 ```
 
 ### Finding NWIS gages
@@ -64,7 +66,7 @@ library(nwmHistoric)
 Analogous functionality for finding USGS NWIS site IDs is provided with `discover_nwis`. This function only returns NWIS sites that record streamflow (USGS parameter code '00060') and are collocated with an NHD catchment represented in the NWM.
 
 ```{r}
-(nwis = discover_nwis(AOI))
+(nwis = nhdplusTools::get_nwis(AOI))
 ```
 
 ## Geometric Discovery
@@ -75,20 +77,22 @@ with a mapping shared [here](https://github.com/opengeospatial/HY_Features/wiki/
 
 ```{r}
 # Return catchments
-catch = discover_nhd(AOI, feature = "catchment")
+catch = nhdplusTools::get_nhdplus(AOI, realization = "catchment")
 
 # Return flowlines
-fl    = discover_nhd(AOI, feature = "flowline")
+fl    = nhdplusTools::get_nhdplus(AOI, realization = "flowline")
 
 # Return outlets
-out   = discover_nhd(AOI, feature = "outlet")
+out   = nhdplusTools::get_nhdplus(AOI, realization = "outlet")
 ```
 
 ```{r, echo = FALSE}
+library(ggplot2)
+
 ggplot() +
   geom_sf(data = catch, aes(fill = "Catchment"), color = "black") +
   geom_sf(data = fl,  aes(color = 'Flowline'), show.legend  = "line") +
-  geom_sf(data = out, aes(color = 'Outlet'),show.legend  = "point") + 
+  geom_sf(data = out, aes(color = 'Outlet'), show.legend  = "point") + 
   geom_sf(data = nwis, aes(color = 'NWIS'),show.legend = "point")+
   scale_fill_manual(values = c("Catchment" = "gray99"), 
                     guide = guide_legend(override.aes = list(linetype = 1, border = "solid", shape = NA))) +
@@ -100,55 +104,47 @@ ggplot() +
 
 ## Putting it all together
 
-Lets look at one integrative example. The aim is to identify a self-contained (e.g watershed) catchment and extract reanalysis records along the mainstem for 2015. The `nhdplusTools` package provides an interface to the Network Linked Data Index which allow users to define a starting point (as a USGS siteID or NHDPlus COMID), and traverse the hydrographic network to find the upstream (or downstream) geometries and indexed elements. 
+Lets look at one integrative example. The aim is to identify a self-contained (e.g watershed) catchment and extract reanalysis records along the mainstem for 2015. The `dataRetrival` package provides an interface to the Network Linked Data Index which allow users to define a starting point (as a USGS siteID or NHDPlus COMID), and traverse the hydrographic network to find the upstream (or downstream) geometries and indexed elements. 
 
 Here we use the NLDI to trace the upstream network and the `nwmHistoric` to extract the relevant streamflow forecasts.
 
 ```{r}
-library(nhdplusTools)
-
-# Start with a nwis site ID
-nldi_feature <- list("nwissite", "USGS-05428500") 
-
-# Find the Upper Mainstem
-um <- navigate_nldi(nldi_feature, mode = "UM") 
+loc = findNLDI(nwis = '05428500', 
+               nav = c("UT", "UM"), 
+               find = c("flowline", "basin"))
 
 # Find 2015 Flows along the Mainstem
-nldi_flows <- readNWMdata(comid = um$nhdplus_comid, 
+nldi_flows <- readNWMdata(comid = loc$UM_flowlines$nhdplus_comid, 
                           startDate = "2015-01-01", 
                           endDate   = "2015-12-31")
-
-# For visualization we also retrieve the upper tributary and basin boundary 
-ut    <-  navigate_nldi(nldi_feature, mode = "UT") 
-basin <-  get_nldi_basin(nldi_feature)
 ```
 
 ```{r, echo = FALSE, fig.width=7.5, fig.height=4}
 # nwmHistric find_outlets functions finds outlets from a flowpath representation
-um_outlets = find_outlets(um)
+um_outlets = nhdplusTools::get_node(loc$UM_flowlines)
 um_outlets$order = factor(nrow(um_outlets):1)
 
 # Make a map
 g1 = ggplot() +
-  geom_sf(data = basin, col = 'gray90') +
-  geom_sf(data = um, col = 'blue') + 
-  geom_sf(data = ut, col = 'lightblue', size = .5) + 
+  geom_sf(data = loc$basin, col = 'gray90') +
+  geom_sf(data = loc$UT_flowlines, col = 'lightblue') + 
+  geom_sf(data = loc$UM_flowlines, col = 'blue', size = .5) + 
   geom_sf(data = um_outlets, aes(color = order), size = 1.25) + 
-  scale_color_manual(values= viridis(24)) +
+  scale_color_manual(values= viridis::viridis(24)) +
   theme_void() + theme(legend.position="none")
 
 
 # Plots the flows
-g2 = ggplot(data = nldi_flows, aes(x = time, y = flow, color = comid)) +
+g2 = ggplot(data = nldi_flows, aes(x = time_utc, y = flow, color = comid)) +
   geom_line(size = .25) + 
-  scale_color_manual(values= viridis(24)) +
+  scale_color_manual(values= viridis::viridis(24)) +
   ggpubr::theme_pubr() +
   labs(y = "Qsim (cms)",
        x = paste0("DateTime (", base::format(nldi_flows$time[1], format="%Z"), ")"), 
        title = paste(nldi_flows$model[1],"Flow Records")) +
   theme(legend.position = 'NA')
 
-grid.arrange(g1,g2, nrow = 1)
+gridExtra::grid.arrange(g1,g2, nrow = 1)
 ```
 
 ```{r teardown, include=FALSE}
